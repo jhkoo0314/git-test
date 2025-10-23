@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// 위험도 타입을 정의하는 Enum (SQLite에서는 String으로 대체)
+// enum RiskType {
+//   LOW      // 낮은 위험
+//   MEDIUM   // 중간 위험
+//   HIGH     // 높은 위험
+//   VERY_HIGH // 매우 높은 위험
+// }
+
+// 경매 매물 모델
+model AuctionItem {
+  id            String    @id @default(cuid())
+  title         String    // 매물 제목
+  itemType      String    // 매물 유형 (부동산)
+  imageUrl      String?   // 매물 이미지 URL
+  appraisedValue Int      // 감정가
+  startingBid   Int      // 시작 입찰가
+  marketPrice   Int      // 시장가
+  riskType      String   // 위험도 타입 ("LOW", "MEDIUM", "HIGH", "VERY_HIGH")
+  riskData      String?  // 위험도 관련 추가 데이터 (JSON 문자열)
+  commentaryId  String?  // 해설 ID (추후 확장용)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 관계 설정
+  simulationResults SimulationResult[]
+
+  @@map("auction_items")
+}
+
+// 사용자 모델
+model User {
+  id               String    @id @default(cuid())
+  simulationPoints Int       @default(1000) // 시뮬레이션 포인트 (기본값 1000)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // 관계 설정
+  simulationResults SimulationResult[]
+
+  @@map("users")
+}
+
+// 시뮬레이션 결과 모델
+model SimulationResult {
+  id            String      @id @default(cuid())
+  userId        String      // 사용자 ID
+  auctionItemId String      // 경매 매물 ID
+  finalBid      Int         // 최종 입찰가
+  result        String      // 결과 ("성공", "실패", "보류" 등)
+  profitOrLoss  Int         // 손익 (양수: 이익, 음수: 손실)
+  createdAt     DateTime    @default(now())
+
+  // 관계 설정
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  auctionItem AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+
+  @@map("simulation_results")
+}
