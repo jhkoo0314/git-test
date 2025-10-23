@@ -312,32 +312,56 @@ export async function POST(
       riskType: auctionItem.riskType,
     });
 
+    // 가상 입찰자 생성
+    console.log(`👥 가상 입찰자 생성 시작`);
+    const virtualBidders = generateVirtualBidders(
+      auctionItem,
+      bidAmount,
+      auctionItemId
+    );
+    console.log(`✅ 가상 입찰자 생성 완료:`, virtualBidders);
+
     // 시뮬레이션 결과 계산
     console.log(
       `🧮 시뮬레이션 계산 시작 - 입찰가: ${bidAmount}원, 감정가: ${auctionItem.appraisedValue}원, 시장가: ${auctionItem.marketPrice}원`
     );
-    const simulationResult = calculateSimulationResult(auctionItem, bidAmount);
+    const simulationResult = calculateSimulationResult(
+      auctionItem,
+      bidAmount,
+      virtualBidders
+    );
     console.log(`📊 시뮬레이션 결과:`, simulationResult);
     console.log(`💰 최종 수익/손실: ${simulationResult.profitOrLoss}원`);
 
     // 성공 응답 반환 - 원래 매물의 가격 정보를 그대로 사용
     const responseData = {
-      success: true,
+      success: simulationResult.isSuccess,
       finalBid: bidAmount,
       profitOrLoss: simulationResult.profitOrLoss,
       marketPrice: auctionItem.marketPrice, // 원래 매물의 시장가 사용
       appraisedValue: auctionItem.appraisedValue, // 원래 매물의 감정가 사용
       riskLevel: auctionItem.riskType,
       recommendation: simulationResult.recommendation,
+      userRank: simulationResult.userRank,
+      totalBidders: simulationResult.totalBidders,
+      virtualBidders: virtualBidders, // 가상 입찰자 정보 포함
       details: {
-        competitionLevel: "보통",
-        biddingHistory: [
-          { bid: bidAmount - 100000, timestamp: new Date().toISOString() },
-          { bid: bidAmount, timestamp: new Date().toISOString() },
-        ],
+        competitionLevel:
+          simulationResult.totalBidders > 8
+            ? "높음"
+            : simulationResult.totalBidders > 6
+            ? "보통"
+            : "낮음",
+        biddingHistory: virtualBidders.map((bidder) => ({
+          name: bidder.name,
+          bid: bidder.bidAmount,
+          timestamp: bidder.timestamp,
+        })),
         marketTrend: "안정적",
       },
-      message: "입찰 처리가 완료되었습니다",
+      message: simulationResult.isSuccess
+        ? "축하합니다! 입찰에 성공했습니다."
+        : "입찰에 실패했습니다.",
     };
 
     console.log(`✅ 입찰 응답 데이터:`, {
@@ -371,10 +395,110 @@ export async function POST(
 }
 
 /**
+ * 가상의 입찰자들을 생성하는 함수
+ */
+function generateVirtualBidders(
+  auctionItem: any,
+  userBidAmount: number,
+  seed: string
+) {
+  const { startingBid, appraisedValue } = auctionItem;
+
+  // 시드를 기반으로 일관된 입찰자 수 생성 (5-10명)
+  const seedHash = seed.split("").reduce((a, b) => {
+    a = (a << 5) - a + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+
+  const bidderCount = 5 + (Math.abs(seedHash) % 6); // 5-10명
+
+  console.log(`👥 가상 입찰자 ${bidderCount}명 생성 시작`);
+
+  const bidderNames = [
+    "김철수",
+    "이영희",
+    "박민수",
+    "최지은",
+    "정다은",
+    "강호동",
+    "한지민",
+    "오세훈",
+    "윤미래",
+    "임창정",
+    "송혜교",
+    "전지현",
+    "조인성",
+    "하정우",
+    "배수지",
+  ];
+
+  const virtualBidders: Array<{
+    name: string;
+    bidAmount: number;
+    timestamp: string;
+  }> = [];
+
+  for (let i = 0; i < bidderCount; i++) {
+    // 시드 기반으로 일관된 이름 선택
+    const nameIndex = Math.abs((seedHash >> (i * 8)) % bidderNames.length);
+    const bidderName = `${bidderNames[nameIndex]}${i + 1}`;
+
+    // 입찰가 생성 (시작가와 감정가 * 1.2 사이에서 랜덤)
+    // 다양한 입찰가를 생성하기 위해 범위를 넓게 설정
+    const minBid = startingBid;
+    const maxBid = appraisedValue * 1.2;
+    const bidRange = maxBid - minBid;
+
+    // 시드 기반 랜덤값 생성
+    const randomSeed = Math.abs(seedHash >> (i * 16));
+    const randomValue = (randomSeed % 1000) / 1000; // 0-1 사이의 값
+
+    // 대부분의 입찰자들은 중간 범위에 몰리도록 조정 (정규분포 비슷하게)
+    const adjustedRandom =
+      randomValue < 0.5
+        ? 0.3 + randomValue * 0.8 // 0.3-0.7 범위
+        : 0.5 + (randomValue - 0.5) * 1.4; // 0.5-1.2 범위
+
+    const bidAmount = Math.floor(minBid + bidRange * adjustedRandom);
+
+    // 백만원 단위로 반올림
+    const roundedBidAmount = Math.round(bidAmount / 1000000) * 1000000;
+
+    virtualBidders.push({
+      name: bidderName,
+      bidAmount: roundedBidAmount,
+      timestamp: new Date(Date.now() - (bidderCount - i) * 60000).toISOString(), // 시간 간격을 두고 입찰
+    });
+
+    console.log(`👤 가상 입찰자 생성: ${bidderName} - ${roundedBidAmount}원`);
+  }
+
+  // 사용자 입찰 추가
+  virtualBidders.push({
+    name: "나",
+    bidAmount: userBidAmount,
+    timestamp: new Date().toISOString(),
+  });
+
+  // 입찰가 기준으로 정렬 (높은 순)
+  virtualBidders.sort((a, b) => b.bidAmount - a.bidAmount);
+
+  console.log(
+    `✅ 가상 입찰자 생성 완료 - 총 ${virtualBidders.length}명 (가상 ${bidderCount}명 + 사용자 1명)`
+  );
+
+  return virtualBidders;
+}
+
+/**
  * 시뮬레이션 결과 계산 함수
  * 매물의 위험도와 입찰가를 기반으로 결과를 계산합니다.
  */
-function calculateSimulationResult(auctionItem: any, bidAmount: number) {
+function calculateSimulationResult(
+  auctionItem: any,
+  bidAmount: number,
+  virtualBidders: any[]
+) {
   const { appraisedValue, marketPrice, riskType } = auctionItem;
 
   console.log(
@@ -386,35 +510,15 @@ function calculateSimulationResult(auctionItem: any, bidAmount: number) {
     `📊 원래 가격 유지 - 시장가: ${marketPrice}원, 감정가: ${appraisedValue}원`
   );
 
-  // 기본 확률 계산 (감정가 대비 입찰가 비율)
-  const bidRatio = bidAmount / appraisedValue;
+  // 사용자의 입찰 순위 찾기
+  const userRank =
+    virtualBidders.findIndex((bidder) => bidder.name === "나") + 1;
+  const totalBidders = virtualBidders.length;
 
-  // 위험도에 따른 성공 확률 조정
-  let successProbability = 0.7; // 기본 성공 확률 70%
+  console.log(`📊 입찰 순위: ${userRank}위 / ${totalBidders}명`);
 
-  switch (riskType) {
-    case "LOW":
-      successProbability = 0.9; // 낮은 위험: 90%
-      break;
-    case "MEDIUM":
-      successProbability = 0.7; // 중간 위험: 70%
-      break;
-    case "HIGH":
-      successProbability = 0.4; // 높은 위험: 40%
-      break;
-    case "VERY_HIGH":
-      successProbability = 0.2; // 매우 높은 위험: 20%
-      break;
-  }
-
-  // 입찰가가 감정가보다 높으면 성공 확률 감소
-  if (bidAmount > appraisedValue) {
-    successProbability *= 0.5;
-  }
-
-  // 랜덤 결과 생성
-  const randomValue = Math.random();
-  const isSuccess = randomValue < successProbability;
+  // 입찰 성공 여부 결정 (1위면 성공)
+  const isSuccess = userRank === 1;
 
   let profitOrLoss = 0;
   let recommendation = "";
@@ -426,24 +530,33 @@ function calculateSimulationResult(auctionItem: any, bidAmount: number) {
 
     if (profitOrLoss > 0) {
       // 이익인 경우
-      recommendation = "🎉 축하합니다! 수익을 거두었습니다.";
+      recommendation = "🎉 축하합니다! 최고가 입찰로 낙찰받았습니다!";
       console.log(`💰 이익 발생: ${profitOrLoss}원`);
     } else {
       // 손실인 경우
-      recommendation = "⚠️ 입찰가가 시장가보다 높아 손실이 발생했습니다.";
+      recommendation =
+        "⚠️ 낙찰은 받았지만 입찰가가 시장가보다 높아 손실이 발생했습니다.";
       console.log(`💸 손실 발생: ${Math.abs(profitOrLoss)}원`);
     }
   } else {
     // 실패한 경우
-    profitOrLoss = -bidAmount; // 입찰가만큼 손실
-    recommendation = "❌ 입찰에 실패했습니다. 다음 기회를 노려보세요.";
-    console.log(`❌ 입찰 실패: ${bidAmount}원 손실`);
+    profitOrLoss = 0; // 입찰 실패 시 손실 없음
+    const highestBidder = virtualBidders[0];
+    const difference = highestBidder.bidAmount - bidAmount;
+    recommendation = `❌ 입찰에 실패했습니다. ${
+      highestBidder.name
+    }님이 ${difference.toLocaleString()}원 더 높은 가격으로 낙찰받았습니다.`;
+    console.log(
+      `❌ 입찰 실패: ${userRank}위 (1위는 ${highestBidder.name}님, ${highestBidder.bidAmount}원)`
+    );
   }
 
   // 시뮬레이션 결과 반환
   return {
     profitOrLoss,
     recommendation,
-    successProbability: Math.round(successProbability * 100), // 백분율로 반환
+    isSuccess,
+    userRank,
+    totalBidders,
   };
 }

@@ -10,9 +10,17 @@ interface BidResult {
   appraisedValue?: number;
   riskLevel?: string;
   recommendation?: string;
+  userRank?: number;
+  totalBidders?: number;
+  virtualBidders?: Array<{
+    name: string;
+    bidAmount: number;
+    timestamp: string;
+  }>;
   details?: {
     competitionLevel?: string;
     biddingHistory?: Array<{
+      name?: string;
       bid: number;
       timestamp: string;
     }>;
@@ -99,9 +107,9 @@ const ResultCard: React.FC<ResultCardProps> = ({
       : null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
       <div
-        className={`${config.bgColor} ${config.borderColor} border-2 rounded-2xl shadow-2xl max-w-md w-full animate-fade-in`}
+        className={`${config.bgColor} ${config.borderColor} border-2 rounded-2xl shadow-2xl max-w-md w-full animate-fade-in my-8 max-h-[90vh] overflow-y-auto`}
       >
         {/* 헤더 */}
         <div className="p-6 text-center">
@@ -116,6 +124,32 @@ const ResultCard: React.FC<ResultCardProps> = ({
 
         {/* 결과 정보 */}
         <div className="px-6 pb-4">
+          {/* 입찰 순위 정보 */}
+          {result.userRank && result.totalBidders && (
+            <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">입찰 순위</p>
+                  <p className="text-2xl font-bold text-purple-700">
+                    {result.userRank}위{" "}
+                    <span className="text-sm text-gray-600">
+                      / {result.totalBidders}명
+                    </span>
+                  </p>
+                </div>
+                <div className="text-4xl">
+                  {result.userRank === 1
+                    ? "🏆"
+                    : result.userRank === 2
+                    ? "🥈"
+                    : result.userRank === 3
+                    ? "🥉"
+                    : "📊"}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-lg p-4 space-y-3">
             {/* 최종 입찰가 */}
             {result.finalBid && (
@@ -147,7 +181,7 @@ const ResultCard: React.FC<ResultCardProps> = ({
             )}
 
             {/* 수익률 */}
-            {profitPercentage && (
+            {profitPercentage && result.success && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">수익률</span>
                 <span
@@ -185,6 +219,68 @@ const ResultCard: React.FC<ResultCardProps> = ({
               </div>
             )}
           </div>
+
+          {/* 가상 입찰자 목록 */}
+          {result.virtualBidders && result.virtualBidders.length > 0 && (
+            <div className="mt-4 bg-white rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                <span className="mr-2">👥</span>
+                입찰자 목록
+              </h3>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {result.virtualBidders.map((bidder, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-2 rounded-lg transition-all ${
+                      bidder.name === "나"
+                        ? "bg-blue-50 border-2 border-blue-300 shadow-sm"
+                        : "bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      {/* 순위 표시 */}
+                      <span
+                        className={`text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full ${
+                          bidder.name === "나"
+                            ? "bg-blue-500 text-white"
+                            : index === 0
+                            ? "bg-yellow-400 text-yellow-900"
+                            : index === 1
+                            ? "bg-gray-300 text-gray-700"
+                            : index === 2
+                            ? "bg-orange-300 text-orange-900"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      {/* 입찰자 이름 */}
+                      <span
+                        className={`text-sm font-medium ${
+                          bidder.name === "나"
+                            ? "text-blue-700"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {bidder.name}
+                        {bidder.name === "나" && " (나)"}
+                      </span>
+                      {/* 1위 트로피 */}
+                      {index === 0 && <span className="text-xs">🏆</span>}
+                    </div>
+                    {/* 입찰가 */}
+                    <span
+                      className={`text-sm font-semibold ${
+                        bidder.name === "나" ? "text-blue-700" : "text-gray-800"
+                      }`}
+                    >
+                      {formatNumber(bidder.bidAmount)}원
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 메시지 */}
           <div className="mt-4 p-3 bg-gray-50 rounded-lg">
