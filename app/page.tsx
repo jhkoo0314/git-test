@@ -239,10 +239,9 @@ export default function HomePage() {
     console.log("👤 사용자 정보 수집 완료:", userInfo); // 로그 추가
 
     setIsSubmittingUserInfo(true);
-    setShowUserInfoModal(false);
 
     try {
-      // 사용자 정보를 서버에 전송 (선택사항)
+      // 사용자 정보를 서버에 전송
       const response = await fetch("/api/collect-user-info", {
         method: "POST",
         headers: {
@@ -253,22 +252,21 @@ export default function HomePage() {
 
       if (response.ok) {
         console.log("✅ 사용자 정보 저장 완료");
+
+        // 성공 메시지 표시
+        alert(
+          `🎉 출시 알림 신청이 완료되었습니다!\n\n${userInfo.name}님의 이메일(${userInfo.email})로\n상세 리포트 기능이 출시되면 알려드리겠습니다.`
+        );
       } else {
-        console.log("⚠️ 사용자 정보 저장 실패 (계속 진행)");
+        console.log("⚠️ 사용자 정보 저장 실패");
+        alert("⚠️ 알림 신청 중 오류가 발생했습니다.\n다시 시도해주세요.");
       }
     } catch (error) {
-      console.log("⚠️ 사용자 정보 저장 중 오류 (계속 진행):", error);
+      console.log("⚠️ 사용자 정보 저장 중 오류:", error);
+      alert("⚠️ 네트워크 오류가 발생했습니다.\n다시 시도해주세요.");
     } finally {
       setIsSubmittingUserInfo(false);
-    }
-
-    // 입찰한 매물 정보를 detailItem으로 설정하고 상세 리포트 표시
-    if (selectedItem) {
-      setDetailItem(selectedItem);
-      setShowDetailReport(true);
-    } else {
-      console.error("❌ 선택된 매물 정보가 없습니다");
-      alert("매물 정보를 찾을 수 없습니다. 다시 시도해주세요.");
+      setShowUserInfoModal(false);
     }
   };
 

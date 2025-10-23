@@ -95,12 +95,14 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full transform transition-all">
           {/* 헤더 */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-xl">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-6 rounded-t-xl">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold">상세 리포트 보기</h3>
-                <p className="text-blue-100 text-sm mt-1">
-                  리포트를 보시려면 정보를 입력해주세요
+                <h3 className="text-xl font-bold">
+                  🚀 상세 리포트 기능 준비 중
+                </h3>
+                <p className="text-primary-100 text-sm mt-1">
+                  출시 소식을 가장 먼저 받아보세요!
                 </p>
               </div>
               <button
@@ -128,29 +130,17 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
           {/* 콘텐츠 */}
           <div className="p-6">
             {/* 안내 메시지 */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-start">
-                <svg
-                  className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <div>
-                  <h4 className="text-sm font-medium text-blue-800">
-                    개인정보 수집 안내
-                  </h4>
-                  <p className="text-sm text-blue-700 mt-1">
-                    상세 리포트를 제공하기 위해 이름과 이메일이 필요합니다.
-                    입력하신 정보는 안전하게 보관되며, 마케팅 목적으로만
-                    사용됩니다.
-                  </p>
-                </div>
+            <div className="mb-6 p-5 bg-gradient-to-br from-primary-50 to-blue-50 rounded-lg border-2 border-primary-200">
+              <div className="text-center">
+                <div className="text-4xl mb-3">📊✨</div>
+                <h4 className="text-lg font-bold text-primary-900 mb-2">
+                  정식 출시가 되면 알려 드리겠습니다
+                </h4>
+                <p className="text-sm text-primary-700 leading-relaxed">
+                  상세 리포트 기능이 곧 출시됩니다.
+                  <br />
+                  이메일을 남겨주시면 정식 출시 소식을 가장 먼저 전해드립니다.
+                </p>
               </div>
             </div>
 
@@ -247,7 +237,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                   !email.trim() ||
                   Object.keys(errors).length > 0
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-primary-600 hover:bg-primary-700 text-white"
                 }`}
               >
                 {isSubmitting ? (
@@ -256,7 +246,7 @@ const UserInfoModal: React.FC<UserInfoModalProps> = ({
                     처리 중...
                   </div>
                 ) : (
-                  "리포트 보기"
+                  "🔔 출시 알림 신청"
                 )}
               </button>
             </div>
