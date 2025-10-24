@@ -10,6 +10,8 @@ interface BidResult {
   appraisedValue?: number;
   riskLevel?: string;
   recommendation?: string;
+  profitAnalysis?: string; // 상세 수익 분석 추가
+  keyLearningPoints?: string[]; // 핵심 학습 포인트 추가
   userRank?: number;
   totalBidders?: number;
   virtualBidders?: Array<{
@@ -302,6 +304,44 @@ const ResultCard: React.FC<ResultCardProps> = ({
                     {result.recommendation}
                   </p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 상세 수익 분석 */}
+          {result.profitAnalysis && (
+            <div className="mt-4 p-4 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200">
+              <h3 className="text-sm font-bold text-purple-900 mb-3 flex items-center">
+                <span className="mr-2">📊</span>
+                상세 분석 리포트
+              </h3>
+              <div className="text-xs text-gray-800 whitespace-pre-line leading-relaxed">
+                {result.profitAnalysis}
+              </div>
+            </div>
+          )}
+
+          {/* 핵심 학습 포인트 */}
+          {result.keyLearningPoints && result.keyLearningPoints.length > 0 && (
+            <div className="mt-4 p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-300">
+              <h3 className="text-sm font-bold text-orange-900 mb-3 flex items-center">
+                <span className="mr-2">🎓</span>
+                핵심 학습 포인트
+              </h3>
+              <div className="space-y-3">
+                {result.keyLearningPoints.map((point, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start space-x-2 p-2 bg-white rounded-lg"
+                  >
+                    <span className="text-orange-500 font-bold text-xs mt-0.5">
+                      {index + 1}.
+                    </span>
+                    <p className="text-xs text-gray-800 leading-relaxed flex-1">
+                      {point}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     console.log("📝 사용자 정보 수집 API 호출"); // 로그 추가
 
     const body = await request.json();
-    const { name, email, propertyTitle } = body;
+    const { name, email, propertyTitle, purpose, metadata } = body;
 
     // 필수 필드 검증
     if (!name || !email) {
@@ -16,6 +16,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log("👤 수집된 데이터:", {
+      name,
+      email,
+      purpose: purpose || "general",
+      propertyTitle,
+      metadata,
+    }); // 로그 추가
 
     // 환경 변수 검증
     const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
@@ -53,18 +61,26 @@ export async function POST(request: NextRequest) {
     });
 
     // 시트에 데이터 추가
-    const values = [[name, email, propertyTitle || "알 수 없음", timestamp]];
+    const purposeText = purpose || "일반 문의";
+    const metadataText = metadata ? JSON.stringify(metadata) : "";
+    const propertyInfo = propertyTitle || "알 수 없음";
+
+    const values = [
+      [name, email, purposeText, propertyInfo, metadataText, timestamp],
+    ];
 
     console.log("📊 구글 시트에 데이터 추가:", {
       name,
       email,
-      propertyTitle,
+      purpose: purposeText,
+      propertyTitle: propertyInfo,
+      metadata: metadataText,
       timestamp,
     }); // 로그 추가
 
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: "A:D", // A열부터 D열까지
+      range: "A:F", // A열부터 F열까지 (이름, 이메일, 목적, 물건정보, 메타데이터, 시간)
       valueInputOption: "RAW",
       requestBody: {
         values: values,

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { DevModeProvider } from "../lib/DevModeContext";
+import DevModeToggle from "../components/DevModeToggle";
 
 export const metadata: Metadata = {
   title: "Bid Master - 경매 시뮬레이션 플랫폼",
@@ -30,43 +32,50 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-gray-50">
-        <div className="min-h-screen flex flex-col">
-          {/* 헤더 */}
-          <header className="bg-white shadow-sm border-b border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <h1 className="text-2xl font-bold text-primary-600">
-                      🏺 Bid Master
-                    </h1>
+        <DevModeProvider>
+          <div className="min-h-screen flex flex-col">
+            {/* 헤더 */}
+            <header className="bg-white shadow-sm border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex justify-between items-center h-16">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <h1 className="text-2xl font-bold text-primary-600">
+                        🏺 Bid Master
+                      </h1>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-600">
-                    시뮬레이션 포인트:{" "}
-                    <span className="font-semibold text-primary-600">
-                      1,000
-                    </span>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm text-gray-600">
+                      시뮬레이션 포인트:{" "}
+                      <span className="font-semibold text-primary-600">
+                        1,000
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          {/* 메인 콘텐츠 */}
-          <main className="flex-1">{children}</main>
+            {/* 메인 콘텐츠 */}
+            <main className="flex-1">{children}</main>
 
-          {/* 푸터 */}
-          <footer className="bg-white border-t border-gray-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-              <div className="text-center text-sm text-gray-500">
-                <p>&copy; 2024 Bid Master. 모든 권리 보유.</p>
-                <p className="mt-1">경매 시뮬레이션을 통한 투자 학습 플랫폼</p>
+            {/* 푸터 */}
+            <footer className="bg-white border-t border-gray-200">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="text-center text-sm text-gray-500">
+                  <p>&copy; 2024 Bid Master. 모든 권리 보유.</p>
+                  <p className="mt-1">
+                    경매 시뮬레이션을 통한 투자 학습 플랫폼
+                  </p>
+                </div>
               </div>
-            </div>
-          </footer>
-        </div>
+            </footer>
+          </div>
+
+          {/* 개발자 모드 토글 버튼 (개발 환경에서만 표시) */}
+          <DevModeToggle />
+        </DevModeProvider>
       </body>
     </html>
   );

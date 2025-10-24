@@ -6,6 +6,9 @@ import ResultCard from "../components/ResultCard";
 import BidInputModal from "../components/BidInputModal";
 import PropertyDetailReport from "../components/PropertyDetailReport";
 import UserInfoModal from "../components/UserInfoModal";
+import AuctionScenarioGenerator from "../components/AuctionScenarioGenerator";
+import DevPanel, { DevInfo } from "../components/DevPanel";
+import { useDevMode } from "../lib/DevModeContext";
 
 // AuctionItem 타입 정의
 interface AuctionItem {
@@ -43,6 +46,9 @@ interface BidResult {
 }
 
 export default function HomePage() {
+  // 개발자 모드 훅
+  const { isDevMode, isDevelopment } = useDevMode();
+
   const [auctionItems, setAuctionItems] = useState<AuctionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,12 +62,20 @@ export default function HomePage() {
   const [showUserInfoModal, setShowUserInfoModal] = useState(false);
   const [isSubmittingUserInfo, setIsSubmittingUserInfo] = useState(false);
 
+  // AI 시나리오 생성 탭 상태
+  const [activeTab, setActiveTab] = useState<"auction" | "ai-generator">(
+    "auction"
+  );
+
   // 페이지네이션 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPrevPage, setHasPrevPage] = useState(false);
+
+  // 개발자 모드 전용: API 응답 데이터 저장
+  const [lastApiResponse, setLastApiResponse] = useState<any>(null);
 
   // API에서 경매 데이터 로드 (페이지네이션 지원)
   const loadAuctionData = async (page: number = 1) => {
@@ -78,6 +92,12 @@ export default function HomePage() {
 
       const result = await response.json();
       console.log("✅ API 응답 받음:", result); // 로그 추가
+
+      // 개발자 모드: API 응답 저장
+      if (isDevMode) {
+        setLastApiResponse(result);
+        console.log("🛠️ [DEV] API 응답 데이터 저장됨");
+      }
 
       if (result.success && result.data) {
         setAuctionItems(result.data);
@@ -376,121 +396,188 @@ export default function HomePage() {
                 💰 수익률 계산
               </span>
             </div>
+
+            {/* 탭 네비게이션 */}
+            <div className="mt-8 flex justify-center gap-4">
+              <button
+                onClick={() => setActiveTab("auction")}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  activeTab === "auction"
+                    ? "bg-white text-primary-600 shadow-lg"
+                    : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+              >
+                🏘️ 경매 매물 입찰
+              </button>
+              <button
+                onClick={() => setActiveTab("ai-generator")}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  activeTab === "ai-generator"
+                    ? "bg-white text-primary-600 shadow-lg"
+                    : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+              >
+                🤖 AI 매물 생성
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 매물 목록 */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8 flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              현재 경매 중인 부동산
-            </h2>
-            <p className="text-gray-600">
-              다양한 위험도와 가격대의 부동산으로 입찰 전략을 연습해보세요
-            </p>
-          </div>
-          <button
-            onClick={() => loadAuctionData(currentPage)}
-            disabled={loading}
-            className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-          >
-            {loading ? (
-              <>
-                <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                로딩 중...
-              </>
-            ) : (
-              <>🔄 새로고침</>
-            )}
-          </button>
-        </div>
+      {/* AI 시나리오 생성기 또는 매물 목록 */}
+      {activeTab === "ai-generator" ? (
+        <AuctionScenarioGenerator />
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* 개발자 모드: 디버그 정보 패널 */}
+          {isDevMode && (
+            <div className="mb-8 space-y-4">
+              <DevPanel
+                title="📊 페이지 상태 정보"
+                data={{
+                  activeTab,
+                  loading,
+                  error,
+                  currentPage,
+                  totalPages,
+                  totalItems,
+                  hasNextPage,
+                  hasPrevPage,
+                  auctionItemsCount: auctionItems.length,
+                  selectedItemId: selectedItem?.id,
+                  showBidModal,
+                  showResult,
+                }}
+              />
+              {lastApiResponse && (
+                <DevPanel title="🔌 마지막 API 응답" data={lastApiResponse} />
+              )}
+            </div>
+          )}
 
-        {/* 매물 그리드 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {auctionItems.map((item) => (
-            <AuctionCard
-              key={item.id}
-              auctionItem={item}
-              onBidClick={handleBidClick}
-              onDetailClick={handleDetailClick}
-              isBidding={biddingItemId === item.id}
-            />
-          ))}
-        </div>
-
-        {/* 매물이 없는 경우 */}
-        {auctionItems.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🏠</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              현재 경매 중인 부동산이 없습니다
-            </h3>
-            <p className="text-gray-600">
-              새로운 부동산이 등록되면 알려드리겠습니다
-            </p>
-          </div>
-        )}
-
-        {/* 페이지네이션 UI */}
-        {auctionItems.length > 0 && totalPages > 1 && (
-          <div className="mt-12 flex flex-col items-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <button
-                onClick={handlePrevPage}
-                disabled={!hasPrevPage || loading}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  !hasPrevPage || loading
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <span>←</span>
-                이전
-              </button>
-
-              {/* 페이지 번호들 */}
-              <div className="flex items-center space-x-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                  (page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      disabled={loading}
-                      className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-                        page === currentPage
-                          ? "bg-primary-600 text-white"
-                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400"
-                      } ${loading ? "cursor-not-allowed opacity-50" : ""}`}
-                    >
-                      {page}
-                    </button>
-                  )
+          <div className="mb-8 flex justify-between items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-3xl font-bold text-gray-900">
+                  현재 경매 중인 부동산
+                </h2>
+                {/* 개발자 모드: 상태 배지 */}
+                {isDevMode && (
+                  <div className="flex gap-2">
+                    <DevInfo label="로딩" value={loading} />
+                    <DevInfo label="매물 수" value={auctionItems.length} />
+                    <DevInfo
+                      label="페이지"
+                      value={`${currentPage}/${totalPages}`}
+                    />
+                  </div>
                 )}
               </div>
-
-              <button
-                onClick={handleNextPage}
-                disabled={!hasNextPage || loading}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-                  !hasNextPage || loading
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                다음
-                <span>→</span>
-              </button>
+              <p className="text-gray-600">
+                다양한 위험도와 가격대의 부동산으로 입찰 전략을 연습해보세요
+              </p>
             </div>
-
-            {/* 페이지 정보 */}
-            <div className="text-sm text-gray-600">
-              페이지 {currentPage} / {totalPages} (총 {totalItems}개 매물)
-            </div>
+            <button
+              onClick={() => loadAuctionData(currentPage)}
+              disabled={loading}
+              className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="spinner h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  로딩 중...
+                </>
+              ) : (
+                <>🔄 새로고침</>
+              )}
+            </button>
           </div>
-        )}
-      </div>
+
+          {/* 매물 그리드 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {auctionItems.map((item) => (
+              <AuctionCard
+                key={item.id}
+                auctionItem={item}
+                onBidClick={handleBidClick}
+                onDetailClick={handleDetailClick}
+                isBidding={biddingItemId === item.id}
+              />
+            ))}
+          </div>
+
+          {/* 매물이 없는 경우 */}
+          {auctionItems.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🏠</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                현재 경매 중인 부동산이 없습니다
+              </h3>
+              <p className="text-gray-600">
+                새로운 부동산이 등록되면 알려드리겠습니다
+              </p>
+            </div>
+          )}
+
+          {/* 페이지네이션 UI */}
+          {auctionItems.length > 0 && totalPages > 1 && (
+            <div className="mt-12 flex flex-col items-center">
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={!hasPrevPage || loading}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    !hasPrevPage || loading
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  <span>←</span>
+                  이전
+                </button>
+
+                {/* 페이지 번호들 */}
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        disabled={loading}
+                        className={`px-3 py-2 rounded-lg font-medium transition-colors ${
+                          page === currentPage
+                            ? "bg-primary-600 text-white"
+                            : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400"
+                        } ${loading ? "cursor-not-allowed opacity-50" : ""}`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                <button
+                  onClick={handleNextPage}
+                  disabled={!hasNextPage || loading}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    !hasNextPage || loading
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  다음
+                  <span>→</span>
+                </button>
+              </div>
+
+              {/* 페이지 정보 */}
+              <div className="text-sm text-gray-600">
+                페이지 {currentPage} / {totalPages} (총 {totalItems}개 매물)
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 입찰가 입력 모달 */}
       <BidInputModal
