@@ -35,6 +35,11 @@ model AuctionItem {
 
   // 관계 설정
   simulationResults SimulationResult[]
+  // 상세/권리/임차/일정 관계
+  detail          AuctionDetail?
+  rights          AuctionRight[]
+  tenants         AuctionTenant[]
+  scheduleEvents  AuctionScheduleEvent[]
 
   @@map("auction_items")
 }
@@ -67,6 +72,78 @@ model SimulationResult {
   auctionItem AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
 
   @@map("simulation_results")
+}
+
+// 경매 상세 정보 (1:1)
+model AuctionDetail {
+  id             String      @id @default(cuid())
+  auctionItemId  String      @unique
+  caseNumber     String      // 사건번호 (예: 2025타경12345)
+  address        String      // 소재지 주소
+  propertyType   String      // 용도/종별(아파트/빌라 등)
+  landArea       Float?      // 토지 면적(㎡)
+  buildingArea   Float?      // 건물 면적(㎡)
+  buildYear      Int?        // 건축년도
+  floor          Int?        // 층/호수 정보(층)
+  usage          String?     // 사용용도(주거/상가 등)
+  memo           String?     // 비고
+
+  auctionItem    AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+
+  @@map("auction_details")
+}
+
+// 권리관계 (N:1)
+model AuctionRight {
+  id            String      @id @default(cuid())
+  auctionItemId String
+  rightType     String      // 권리 종류(근저당, 가압류, 압류, 전세권 등)
+  rank          Int?        // 순위(1,2,...)
+  establishedAt String?     // 설정일(YYYY-MM-DD)
+  claimAmount   Int?        // 채권액(원)
+  isBaseRight   Boolean     @default(false) // 말소기준권리 여부
+  holder        String?     // 권리자(은행/개인 등)
+  memo          String?     // 비고
+
+  auctionItem   AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+
+  @@index([auctionItemId])
+  @@map("auction_rights")
+}
+
+// 임차/점유 (N:1)
+model AuctionTenant {
+  id               String      @id @default(cuid())
+  auctionItemId    String
+  tenantType       String      // 임차 유형(전세/반전세/월세/선순위 등)
+  deposit          Int?        // 보증금(원)
+  monthlyRent      Int?        // 월세(원)
+  moveInDate       String?     // 전입일(YYYY-MM-DD)
+  fixedDate        String?     // 확정일자(YYYY-MM-DD)
+  hasOpposability  Boolean?    // 대항력 보유 여부
+  hasPreferential  Boolean?    // 우선변제권 보유 여부
+  occupancy        String?     // 점유상태(거주/공실 등)
+  name             String?     // 임차인 이름(가명 가능)
+  memo             String?     // 비고
+
+  auctionItem      AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+
+  @@index([auctionItemId])
+  @@map("auction_tenants")
+}
+
+// 일정/변경 이력 (N:1)
+model AuctionScheduleEvent {
+  id            String      @id @default(cuid())
+  auctionItemId String
+  eventDate     String      // YYYY-MM-DD
+  eventType     String      // 공고/변경/연기/취소/입찰일 등
+  memo          String?
+
+  auctionItem   AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+
+  @@index([auctionItemId])
+  @@map("auction_schedule_events")
 }
 
 // AI 시나리오 사용량 추적 모델

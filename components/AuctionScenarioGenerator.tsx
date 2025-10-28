@@ -10,8 +10,8 @@ import {
   CheckCircle,
   Lock,
 } from "lucide-react";
-import { getUserId } from "@/lib/userStorage";
-import { useDevMode } from "@/lib/DevModeContext";
+import { getUserId } from "../lib/userStorage";
+import { useDevMode } from "../lib/DevModeContext";
 import UserInfoModal from "./UserInfoModal";
 
 interface ScenarioParams {
@@ -82,7 +82,12 @@ interface GeneratedScenario {
 
 const AuctionScenarioGenerator = () => {
   // DevMode 훅 사용 - DevModeToggle 상태 가져오기
-  const { isDevMode } = useDevMode();
+  const { isDevMode, isHydrated } = useDevMode();
+
+  // 에러 처리: 개발자 모드가 제대로 초기화되지 않은 경우
+  if (typeof isDevMode === "undefined") {
+    console.warn("⚠️ AuctionScenarioGenerator: 개발자 모드 초기화 실패");
+  }
 
   const [params, setParams] = useState<ScenarioParams>({
     propertyType: "apartment",
@@ -170,6 +175,12 @@ const AuctionScenarioGenerator = () => {
     isDeveloperMode,
   });
 
+  // 출시 알림 신청 핸들러
+  const handleNotificationSignup = async () => {
+    console.log("🔔 출시 알림 신청 버튼 클릭");
+    setShowDetailModal(true);
+  };
+
   // 사용자 정보 수집 핸들러
   const handleUserInfoSubmit = async (userInfo: {
     name: string;
@@ -179,8 +190,8 @@ const AuctionScenarioGenerator = () => {
     console.log("📧 상세 리포트 요청 - 사용자 정보:", userInfo);
 
     try {
-      // 사용자 정보 수집 API 호출
-      const response = await fetch("/api/collect-user-info", {
+      // 출시 알림 신청 API 호출 (구글 시트 연동)
+      const response = await fetch("/api/user-info", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -188,11 +199,11 @@ const AuctionScenarioGenerator = () => {
         body: JSON.stringify({
           name: userInfo.name,
           email: userInfo.email,
-          purpose: "ai_scenario_detail_report",
+          purpose: "AI 시나리오 상세 리포트 출시 알림",
           metadata: {
-            caseId: scenario?.caseId,
-            propertyType: params.propertyType,
-            difficulty: params.difficulty,
+            source: "auction-scenario-generator",
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
           },
         }),
       });
@@ -200,13 +211,11 @@ const AuctionScenarioGenerator = () => {
       const result = await response.json();
 
       if (result.success) {
-        console.log("✅ 사용자 정보 수집 성공");
-        alert(
-          "✅ 신청이 완료되었습니다!\n\n상세 리포트 기능이 출시되면 이메일로 알려드리겠습니다. 감사합니다! 😊"
-        );
+        console.log("✅ 출시 알림 신청 성공");
+        alert(result.message || "🎉 출시 알림 신청이 완료되었습니다!");
         setShowDetailModal(false);
       } else {
-        console.error("❌ 사용자 정보 수집 실패:", result.error);
+        console.error("❌ 출시 알림 신청 실패:", result.error);
         alert("❌ 신청 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     } catch (err) {
@@ -460,7 +469,7 @@ const AuctionScenarioGenerator = () => {
                 <h3 className="text-lg font-bold text-gray-800 mb-3">
                   🏠 물건 정보
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <p className="text-sm text-gray-600">주소</p>
                     <p className="font-semibold">
@@ -478,6 +487,15 @@ const AuctionScenarioGenerator = () => {
                     <p className="font-semibold text-blue-600">
                       {(
                         scenario.propertyInfo.appraisalValue / 10000
+                      ).toLocaleString()}
+                      만원
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">시장가</p>
+                    <p className="font-semibold text-green-600">
+                      {(
+                        (scenario as any).auction?.marketPrice / 10000
                       ).toLocaleString()}
                       만원
                     </p>
@@ -731,6 +749,13 @@ const AuctionScenarioGenerator = () => {
                         💡 출시 알림 신청 시 상세 리포트 기능이 출시되면 가장
                         먼저 안내받으실 수 있습니다
                       </p>
+                      <button
+                        onClick={handleNotificationSignup}
+                        disabled={isSubmittingEmail}
+                        className="flex-1 px-4 py-3 rounded-lg font-medium transition-colors bg-primary-600 hover:bg-primary-700 text-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed mt-3"
+                      >
+                        🔔 출시 알림 신청
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -10,140 +10,8 @@ try {
   prisma = null;
 }
 
-// 매물 유형별 이름과 이미지 생성 함수
-function generatePropertyName(itemType: string) {
-  const propertyNames = {
-    아파트: [
-      "강남구 래미안아트팰리스",
-      "서초구 헬리오시티",
-      "송파구 잠실래미안",
-      "마포구 홍대아이파크",
-      "용산구 한남더힐",
-      "강동구 천호아이파크",
-      "노원구 상계힐스테이트",
-      "영등포구 타워팰리스",
-      "강서구 화곡래미안",
-      "동작구 사당아이파크",
-    ],
-    빌라: [
-      "홍대다세대주택",
-      "신촌빌라",
-      "이태원빌라",
-      "강남빌라",
-      "서초빌라",
-      "송파빌라",
-      "마포빌라",
-      "용산빌라",
-      "강동빌라",
-      "노원빌라",
-    ],
-    오피스텔: [
-      "천호비즈니스텔",
-      "강남오피스텔",
-      "서초오피스텔",
-      "송파오피스텔",
-      "마포오피스텔",
-      "용산오피스텔",
-      "강동오피스텔",
-      "노원오피스텔",
-      "영등포오피스텔",
-      "동작오피스텔",
-    ],
-    상가: [
-      "인사동상가건물",
-      "명동상가건물",
-      "강남상가건물",
-      "서초상가건물",
-      "송파상가건물",
-      "마포상가건물",
-      "용산상가건물",
-      "강동상가건물",
-      "노원상가건물",
-      "영등포상가건물",
-    ],
-    단독주택: [
-      "한남단독주택",
-      "성수단독주택",
-      "압구정단독주택",
-      "청담단독주택",
-      "반포단독주택",
-      "잠실단독주택",
-      "홍대단독주택",
-      "이태원단독주택",
-      "강남단독주택",
-      "서초단독주택",
-    ],
-    원룸: [
-      "사당원룸텔",
-      "강남원룸텔",
-      "서초원룸텔",
-      "송파원룸텔",
-      "마포원룸텔",
-      "용산원룸텔",
-      "강동원룸텔",
-      "노원원룸텔",
-      "영등포원룸텔",
-      "동작원룸텔",
-    ],
-  };
-
-  const names =
-    propertyNames[itemType as keyof typeof propertyNames] ||
-    propertyNames["아파트"];
-  return names[Math.floor(Math.random() * names.length)];
-}
-
-function generatePropertyImage(itemType: string) {
-  const propertyImages = {
-    아파트: [
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop",
-    ],
-    빌라: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-    ],
-    오피스텔: [
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    ],
-    상가: [
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    ],
-    단독주택: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop",
-    ],
-    원룸: [
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop",
-    ],
-  };
-
-  const images =
-    propertyImages[itemType as keyof typeof propertyImages] ||
-    propertyImages["아파트"];
-  return images[Math.floor(Math.random() * images.length)];
-}
+// ===== AI 마스터 생성기 사용으로 시드 로직 업데이트 =====
+import { generateAuctionMaster } from "../lib/scenarioGenerator";
 
 // 랜덤 데이터 생성 함수들
 function getRandomOwnershipStatus() {
@@ -239,100 +107,30 @@ function getPriceRange(itemType: string) {
   );
 }
 
-// 위험도 타입 생성
-function getRandomRiskType() {
-  const riskTypes = [
-    "클린",
-    "복합위험",
-    "근저당위험",
-    "임차인위험",
-    "소유권분쟁",
-    "상속분할",
-    "건물허가문제",
-    "최고근저당",
-    "전세권설정",
-    "환경문제",
-    "혼인재산",
-    "노후건물",
-  ];
-  return riskTypes[Math.floor(Math.random() * riskTypes.length)];
-}
+// 기존 랜덤 리스크 타입/이름/이미지 로직은 사용하지 않음
 
-// 동적 매물 데이터 생성 함수
-function generateAuctionItem(itemType: string, index: number) {
-  const priceRange = getPriceRange(itemType);
-  const basePrice =
-    Math.floor(Math.random() * (priceRange.max - priceRange.min)) +
-    priceRange.min;
-
-  // 감정가를 기준으로 시작가와 시장가 계산
-  const appraisedValue = basePrice;
-  const startingBid = Math.floor(appraisedValue * (0.7 + Math.random() * 0.2)); // 70-90%
-  const marketPrice = Math.floor(
-    appraisedValue * (0.85 + Math.random() * 0.35)
-  ); // 85-120%
-
-  const propertyName = generatePropertyName(itemType);
-  const imageUrl = generatePropertyImage(itemType);
-  const riskType = getRandomRiskType();
-
-  // 동호수 생성
-  const buildingNumber = Math.floor(Math.random() * 5) + 1; // 1-5동
-  const floorNumber = Math.floor(Math.random() * 20) + 1; // 1-20층
-  const roomNumber = Math.floor(Math.random() * 20) + 1; // 1-20호
-
-  return {
-    title: `서울시 ${propertyName} ${buildingNumber}동 ${floorNumber}${roomNumber
-      .toString()
-      .padStart(2, "0")}호`,
-    itemType: itemType,
-    imageUrl: imageUrl,
-    appraisedValue: appraisedValue,
-    startingBid: startingBid,
-    marketPrice: marketPrice,
-    riskType: riskType,
-    riskData: {
-      소유권현황: getRandomOwnershipStatus(),
-      근저당정보: getRandomMortgageInfo(),
-      임차인정보: getRandomTenantInfo(),
-      법적문제: getRandomLegalIssues(),
-      건물상태: getRandomPropertyCondition(),
-      특이사항: `${riskType} 관련 주의사항이 있습니다.`,
-    },
-    commentaryId: `cmt_${riskType.toLowerCase()}_${index
-      .toString()
-      .padStart(2, "0")}`,
-  };
-}
+// 동적 매물 데이터 생성 함수는 AI 마스터 생성으로 대체
 
 // 매물 유형별 데이터 생성
-const propertyTypes = [
-  "아파트",
-  "빌라",
-  "오피스텔",
-  "상가",
-  "단독주택",
-  "원룸",
-];
-const auctionItemsData = [];
+const auctionItemsData: Array<ReturnType<typeof generateAuctionMaster>> = [];
 
-// 각 매물 유형별로 2-3개씩 생성
-propertyTypes.forEach((itemType, typeIndex) => {
-  const count = Math.floor(Math.random() * 2) + 2; // 2-3개
-  for (let i = 0; i < count; i++) {
-    const itemIndex = typeIndex * 3 + i;
-    auctionItemsData.push(generateAuctionItem(itemType, itemIndex));
-  }
-});
+// AI 마스터 기반 데이터 12~18개 생성
+const total = Math.floor(Math.random() * 7) + 12;
+for (let i = 0; i < total; i++) {
+  const seed = `ITEM-${i + 1}`;
+  auctionItemsData.push(generateAuctionMaster(seed));
+}
 
 async function main() {
   console.log("🌱 데이터베이스 시드 작업을 시작합니다...");
 
   if (!prisma) {
     console.log("📋 생성된 매물 데이터 (Prisma 클라이언트 없이):");
-    auctionItemsData.forEach((item, index) => {
+    auctionItemsData.forEach((m, index) => {
       console.log(
-        `${index + 1}. ${item.title} (${item.itemType}) - ${item.riskType}`
+        `${index + 1}. ${m.item.title} (${m.item.itemType}) - ${
+          m.item.riskType
+        }`
       );
     });
     console.log(
@@ -343,26 +141,46 @@ async function main() {
 
   try {
     // 기존 데이터 삭제 (선택사항)
-    console.log("🗑️ 기존 경매 매물 데이터를 삭제합니다...");
+    console.log(
+      "🗑️ 기존 경매 매물 및 상세/권리/임차/일정 데이터를 삭제합니다..."
+    );
+    await prisma.auctionRight.deleteMany({});
+    await prisma.auctionTenant.deleteMany({});
+    await prisma.auctionScheduleEvent.deleteMany({});
+    await prisma.auctionDetail.deleteMany({});
     await prisma.auctionItem.deleteMany({});
 
     // 새로운 데이터 삽입
     console.log("📦 경매 매물 데이터를 삽입합니다...");
 
-    for (const itemData of auctionItemsData) {
+    for (const m of auctionItemsData) {
       const createdItem = await prisma.auctionItem.create({
         data: {
-          title: itemData.title,
-          itemType: itemData.itemType,
-          imageUrl: itemData.imageUrl,
-          appraisedValue: itemData.appraisedValue,
-          startingBid: itemData.startingBid,
-          marketPrice: itemData.marketPrice,
-          riskType: itemData.riskType,
-          riskData: itemData.riskData
-            ? JSON.stringify(itemData.riskData)
-            : null,
-          commentaryId: itemData.commentaryId,
+          title: m.item.title,
+          itemType: m.item.itemType,
+          imageUrl: m.item.imageUrl ?? null,
+          appraisedValue: m.item.appraisedValue,
+          startingBid: m.item.startingBid,
+          marketPrice: m.item.marketPrice,
+          riskType: m.item.riskType,
+          riskData: m.item.riskData ? JSON.stringify(m.item.riskData) : null,
+          commentaryId: null,
+          detail: {
+            create: {
+              caseNumber: m.detail.caseNumber,
+              address: m.detail.address,
+              propertyType: m.detail.propertyType,
+              landArea: m.detail.landArea ?? null,
+              buildingArea: m.detail.buildingArea ?? null,
+              buildYear: m.detail.buildYear ?? null,
+              floor: m.detail.floor ?? null,
+              usage: m.detail.usage ?? null,
+              memo: m.detail.memo ?? null,
+            },
+          },
+          rights: { create: m.rights },
+          tenants: { create: m.tenants },
+          scheduleEvents: { create: m.schedule },
         },
       });
 

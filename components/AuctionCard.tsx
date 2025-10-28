@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 // AuctionItem 타입 정의 (Prisma 스키마 기반)
 interface AuctionItem {
@@ -18,14 +19,12 @@ interface AuctionItem {
 interface AuctionCardProps {
   auctionItem: AuctionItem;
   onBidClick?: (item: AuctionItem) => void;
-  onDetailClick?: (item: AuctionItem) => void;
   isBidding?: boolean;
 }
 
 const AuctionCard: React.FC<AuctionCardProps> = ({
   auctionItem,
   onBidClick,
-  onDetailClick,
   isBidding = false,
 }) => {
   // 매물 유형에 따른 아이콘 설정
@@ -281,34 +280,30 @@ const AuctionCard: React.FC<AuctionCardProps> = ({
         </div>
 
         {/* 버튼 그룹 */}
-        <div className="space-y-2">
-          {/* 입찰 버튼 */}
+        <div className="mt-4 flex justify-between items-center">
           <button
             onClick={() => onBidClick?.(auctionItem)}
             disabled={isBidding}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-              isBidding
-                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                : "bg-primary-600 hover:bg-primary-700 text-white hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+            className={`bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 ${
+              isBidding ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isBidding ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 입찰 중...
               </div>
             ) : (
               "입찰하기"
             )}
           </button>
-
-          {/* 상세보기 버튼 */}
-          <button
-            onClick={() => onDetailClick?.(auctionItem)}
-            className="w-full py-2 px-4 rounded-lg font-medium transition-all duration-200 bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border border-gray-300 hover:border-gray-400"
+          {/* [수정] '상세보기' 버튼을 Link로 변경 */}
+          <Link
+            href={`/auctions/${auctionItem.id}`}
+            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200"
           >
-            📋 상세보기
-          </button>
+            상세보기
+          </Link>
         </div>
 
         {/* 추가 정보 */}

@@ -12,6 +12,8 @@
 - **🛠️ 개발자 모드**: 디버그 도구 및 무제한 생성 기능
 - **📧 이메일 연동**: Gmail API를 통한 사용자 알림 시스템
 - **📊 사용량 관리**: Google Sheets 기반 주간 사용량 추적
+- **🔧 Chrome DevTools MCP**: AI 도우미를 통한 자동화된 웹 테스트 및 디버깅
+- **📋 상세 매물 분석**: 등기부등본, 현황조사서, 권리관계 등 전문 분석 리포트
 
 ## 기술 스택
 
@@ -45,6 +47,7 @@
 - **pnpm** - 패키지 매니저
 - **tsx** - TypeScript 실행기
 - **Autoprefixer** - CSS 벤더 프리픽스 자동 추가
+- **Chrome DevTools MCP** - AI 도우미를 통한 자동화된 웹 테스트 및 디버깅
 
 ## 프로젝트 구조
 
@@ -87,24 +90,38 @@ bid master/
 │   ├── EmailSendModal.tsx       # 이메일 전송 모달
 │   ├── PropertyDetailReport.tsx # 매물 권리분석 리포트
 │   ├── ResultCard.tsx           # 입찰 결과 카드
-│   └── UserInfoModal.tsx        # 사용자 정보 수집 모달
+│   ├── UserInfoModal.tsx        # 사용자 정보 수집 모달
+│   └── property/                # 매물 상세 분석 컴포넌트
+│       ├── OverviewSection.tsx  # 기본 개요 섹션
+│       ├── RightsSection.tsx    # 권리관계 섹션
+│       ├── ScheduleSection.tsx  # 일정 섹션
+│       └── TenantsSection.tsx   # 임차/점유 섹션
 ├── lib/                         # 유틸리티 라이브러리
 │   ├── dateUtils.ts             # 날짜 처리 유틸리티
 │   ├── DevModeContext.tsx       # 개발자 모드 Context
 │   ├── scenarioGenerator.ts     # AI 시나리오 생성 로직
 │   └── userStorage.ts           # 사용자 ID 저장소
 ├── docs/                        # 문서
+│   ├── CHROME_DEVTOOLS_MCP_SETUP.md # Chrome DevTools MCP 설정 가이드
 │   ├── DEV_MODE_GUIDE.md        # 개발자 모드 가이드
 │   ├── EMAIL_USAGE_EXAMPLES.md  # 이메일 사용 예시
 │   ├── GMAIL_API_SETUP.md       # Gmail API 설정 가이드
 │   ├── GOOGLE_SHEETS_API_SETUP.md # Google Sheets API 설정
-│   └── GOOGLE_SHEETS_USAGE.md   # Google Sheets 사용 가이드
+│   ├── GOOGLE_SHEETS_USAGE.md   # Google Sheets 사용 가이드
+│   └── USER_INFO_GOOGLE_SHEETS_SETUP.md # 사용자 정보 Google Sheets 설정
 ├── prisma/                      # 데이터베이스 스키마
 │   ├── schema.prisma            # Prisma 스키마 정의
 │   ├── dev.db                   # SQLite 데이터베이스
 │   └── seed.ts                  # 시드 데이터 생성
 ├── generated/                   # Prisma 생성 파일
 │   └── prisma/
+├── scripts/                     # 유틸리티 스크립트
+│   └── setup-chrome-devtools-mcp.js # Chrome DevTools MCP 설정 스크립트
+├── examples/                    # 사용 예시
+│   ├── send-email-test.ts       # 이메일 전송 테스트
+│   └── user-info-test.ts        # 사용자 정보 테스트
+├── mcp-config.json             # MCP 서버 설정
+├── google-sheets-mcp-server.py # Google Sheets MCP 서버
 ├── agent.md                     # 프로젝트 문서 (본 파일)
 └── package.json                 # 프로젝트 설정
 ```
@@ -187,7 +204,26 @@ bid master/
 - **실시간 유효성 검증**: 이메일 형식 검증
 - **성공/실패 피드백**: 친화적인 메시지 표시
 
-### 7. 사용자 경험
+### 7. 🔧 Chrome DevTools MCP (신규 기능)
+
+- **자동화된 웹 테스트**: AI 도우미를 통한 자동화된 웹사이트 테스트
+- **실시간 디버깅**: 브라우저 환경에서 실시간 에러 확인 및 디버깅
+- **성능 분석**: 페이지 로딩 시간, 네트워크 요청, 콘솔 로그 모니터링
+- **스크린샷 촬영**: 웹페이지 상태를 이미지로 캡처하여 시각적 확인
+- **DOM 조작**: 요소 클릭, 텍스트 입력 등 사용자 상호작용 시뮬레이션
+- **반응형 테스트**: 다양한 화면 크기에서의 레이아웃 테스트
+- **에러 추적**: JavaScript 에러 및 네트워크 오류 실시간 모니터링
+
+### 8. 📋 상세 매물 분석 (신규 기능)
+
+- **등기부등본 분석**: 갑구/을구 기반 권리관계 상세 분석
+- **현황조사서**: 임차인 정보 및 점유 현황 분석
+- **권리관계 시각화**: 말소기준권리, 인수권리 등 권리 구조 표시
+- **일정 관리**: 경매 일정, 입찰 마감일 등 중요 일정 추적
+- **임차/점유 분석**: 대항력, 우선변제권 등 임차인 권리 분석
+- **투자 위험도 평가**: 종합적인 위험도 분석 및 투자 권고사항
+
+### 9. 사용자 경험
 
 - **반응형 디자인**: 모바일, 태블릿, 데스크톱 지원
 - **직관적인 UI**: 이모지와 색상을 활용한 직관적 인터페이스
@@ -835,6 +871,8 @@ pnpm run dev
 | `pnpm run db:push`     | 데이터베이스 스키마 푸시              |
 | `pnpm run db:seed`     | 시드 데이터 삽입                      |
 | `pnpm run db:studio`   | Prisma Studio 실행 (데이터베이스 GUI) |
+| `pnpm run mcp:setup`   | Chrome DevTools MCP 설정              |
+| `pnpm run mcp:start`   | Chrome DevTools MCP 서버 시작         |
 
 ### Google Sheets 연동 설정
 
@@ -845,6 +883,36 @@ pnpm run dev
 5. **환경 변수에 인증 정보 설정**
 
 자세한 가이드는 [Google Sheets API 문서](https://developers.google.com/sheets/api/guides/authorizing)를 참조하세요.
+
+### Chrome DevTools MCP 설정
+
+Chrome DevTools MCP를 사용하여 AI 도우미와 함께 자동화된 웹 테스트를 수행할 수 있습니다.
+
+#### 자동 설정 (권장)
+
+```bash
+# 프로젝트 루트에서 실행
+pnpm run mcp:setup
+```
+
+#### 수동 설정
+
+1. **Chrome을 디버깅 모드로 시작**:
+
+   ```bash
+   # Windows
+   "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --disable-web-security --user-data-dir=./chrome-debug-profile
+
+   # macOS
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --disable-web-security --user-data-dir=./chrome-debug-profile
+   ```
+
+2. **MCP 서버 시작**:
+   ```bash
+   pnpm run mcp:start
+   ```
+
+자세한 가이드는 `docs/CHROME_DEVTOOLS_MCP_SETUP.md`를 참조하세요.
 
 ## 컴포넌트 구조
 
@@ -953,6 +1021,51 @@ AI 경매 시나리오 생성기 컴포넌트
 - 이메일 형식 검증
 - Google Sheets 연동
 - 다양한 목적 지원 (리포트 조회, 알림 신청 등)
+
+### 10. Property 분석 컴포넌트들
+
+#### OverviewSection.tsx
+
+매물의 기본 개요 정보를 표시하는 컴포넌트
+
+**주요 기능**:
+
+- 매물명, 사건번호, 주소, 용도/종별 표시
+- 가격 정보 (시작가, 감정가, 시장가) 시각화
+- 위험도 배지 및 색상 코딩
+
+#### RightsSection.tsx
+
+권리관계를 상세히 분석하는 컴포넌트
+
+**주요 기능**:
+
+- 권리 순위별 정렬 및 표시
+- 말소기준권리 하이라이트
+- 설정일, 채권액, 권리자 정보 표시
+- 권리 유형별 분류 및 시각화
+
+#### TenantsSection.tsx
+
+임차인 및 점유 현황을 분석하는 컴포넌트
+
+**주요 기능**:
+
+- 임차인 유형별 분류 (임차인, 점유자 등)
+- 대항력, 우선변제권 표시
+- 보증금, 월세, 전입일 정보
+- 점유 현황 및 확정일자 표시
+
+#### ScheduleSection.tsx
+
+경매 일정 및 중요 날짜를 관리하는 컴포넌트
+
+**주요 기능**:
+
+- 경매 일정 표시
+- 입찰 마감일 알림
+- 중요 절차별 일정 관리
+- 일정별 메모 및 참고사항
 
 ## 주요 페이지
 
@@ -1141,9 +1254,23 @@ MIT License - 자유롭게 사용, 수정, 배포 가능
   - 환경 변수 설정
 
 - **`docs/GOOGLE_SHEETS_USAGE.md`**: Google Sheets 사용 가이드
+
   - 데이터 읽기/쓰기
   - 사용량 관리
   - 에러 처리
+
+- **`docs/USER_INFO_GOOGLE_SHEETS_SETUP.md`**: 사용자 정보 Google Sheets 설정
+  - 사용자 정보 수집 시트 설정
+  - 데이터 구조 및 필드 매핑
+  - 자동화된 데이터 관리
+
+### Chrome DevTools MCP
+
+- **`docs/CHROME_DEVTOOLS_MCP_SETUP.md`**: Chrome DevTools MCP 설정 가이드
+  - MCP 서버 설치 및 설정
+  - Chrome 디버깅 모드 설정
+  - 자동화된 웹 테스트 활용법
+  - 성능 분석 및 디버깅 방법
 
 ### API 문서
 
@@ -1162,6 +1289,6 @@ MIT License - 자유롭게 사용, 수정, 배포 가능
 
 AI 시나리오 생성 엔진을 통해 무한히 다양한 학습 콘텐츠를 제공하며, 개발자 도구를 통해 편리한 개발 경험을 지원합니다.
 
-**프로젝트 상태**: 개발 중 (MVP 완료 + AI 시나리오 생성 기능 추가)  
-**최종 업데이트**: 2025년 10월  
-**버전**: 2.0.0
+**프로젝트 상태**: 개발 중 (MVP 완료 + AI 시나리오 생성 + Chrome DevTools MCP + 상세 매물 분석 기능 추가)  
+**최종 업데이트**: 2025년 1월  
+**버전**: 2.1.0

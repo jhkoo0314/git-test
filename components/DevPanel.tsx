@@ -18,11 +18,32 @@ export default function DevPanel({
   data,
   className = "",
 }: DevPanelProps) {
-  const { isDevMode } = useDevMode();
+  const { isDevMode, isHydrated } = useDevMode();
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // 디버그 로그 추가
+  console.log("🛠️ DevPanel 렌더링", {
+    title,
+    isDevMode,
+    isHydrated,
+    hasData: !!data,
+  });
+
+  // hydration이 완료되지 않았으면 렌더링하지 않음
+  if (!isHydrated) {
+    console.log("🛠️ DevPanel: hydration 대기 중");
+    return null;
+  }
+
+  // 에러 처리: 개발자 모드가 제대로 초기화되지 않은 경우
+  if (typeof isDevMode === "undefined") {
+    console.warn("⚠️ DevPanel: 개발자 모드 초기화 실패");
+    return null;
+  }
 
   // 개발자 모드가 아니면 렌더링하지 않음
   if (!isDevMode) {
+    console.log("🛠️ DevPanel: 개발자 모드가 비활성화됨");
     return null;
   }
 
@@ -67,7 +88,18 @@ interface DevInfoProps {
 }
 
 export function DevInfo({ label, value, className = "" }: DevInfoProps) {
-  const { isDevMode } = useDevMode();
+  const { isDevMode, isHydrated } = useDevMode();
+
+  // hydration이 완료되지 않았으면 렌더링하지 않음
+  if (!isHydrated) {
+    return null;
+  }
+
+  // 에러 처리: 개발자 모드가 제대로 초기화되지 않은 경우
+  if (typeof isDevMode === "undefined") {
+    console.warn("⚠️ DevInfo: 개발자 모드 초기화 실패");
+    return null;
+  }
 
   if (!isDevMode) {
     return null;
@@ -93,7 +125,18 @@ interface DevLogProps {
 }
 
 export function DevLog({ logs, maxLogs = 10, className = "" }: DevLogProps) {
-  const { isDevMode } = useDevMode();
+  const { isDevMode, isHydrated } = useDevMode();
+
+  // hydration이 완료되지 않았으면 렌더링하지 않음
+  if (!isHydrated) {
+    return null;
+  }
+
+  // 에러 처리: 개발자 모드가 제대로 초기화되지 않은 경우
+  if (typeof isDevMode === "undefined") {
+    console.warn("⚠️ DevLog: 개발자 모드 초기화 실패");
+    return null;
+  }
 
   if (!isDevMode) {
     return null;
@@ -123,5 +166,3 @@ export function DevLog({ logs, maxLogs = 10, className = "" }: DevLogProps) {
     </div>
   );
 }
-
-

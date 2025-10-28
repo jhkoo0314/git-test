@@ -9,6 +9,7 @@ import UserInfoModal from "../components/UserInfoModal";
 import AuctionScenarioGenerator from "../components/AuctionScenarioGenerator";
 import DevPanel, { DevInfo } from "../components/DevPanel";
 import { useDevMode } from "../lib/DevModeContext";
+import { InteractiveTutor } from "../components/InteractiveTutor";
 
 // AuctionItem 타입 정의
 interface AuctionItem {
@@ -47,7 +48,26 @@ interface BidResult {
 
 export default function HomePage() {
   // 개발자 모드 훅
-  const { isDevMode, isDevelopment } = useDevMode();
+  const { isDevMode, isDevelopment, isHydrated } = useDevMode();
+
+  // 디버그 로그 추가
+  console.log("🛠️ HomePage 렌더링", {
+    isDevMode,
+    isDevelopment,
+    isHydrated,
+  });
+
+  // 에러 처리: 개발자 모드가 제대로 초기화되지 않은 경우
+  if (
+    typeof isDevMode === "undefined" ||
+    typeof isDevelopment === "undefined"
+  ) {
+    console.warn("⚠️ HomePage: 개발자 모드 초기화 실패", {
+      isDevMode,
+      isDevelopment,
+      isHydrated,
+    });
+  }
 
   const [auctionItems, setAuctionItems] = useState<AuctionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,9 +83,9 @@ export default function HomePage() {
   const [isSubmittingUserInfo, setIsSubmittingUserInfo] = useState(false);
 
   // AI 시나리오 생성 탭 상태
-  const [activeTab, setActiveTab] = useState<"auction" | "ai-generator">(
-    "auction"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "auction" | "ai-generator" | "tutor"
+  >("auction");
 
   // 페이지네이션 상태 추가
   const [currentPage, setCurrentPage] = useState(1);
@@ -237,12 +257,12 @@ export default function HomePage() {
     setShowUserInfoModal(true);
   };
 
-  // 매물 상세보기 클릭 처리 - 직접 상세 정보 표시
+  // 매물 상세보기 클릭 처리 - 상세 페이지로 이동
   const handleDetailClick = (item: AuctionItem) => {
     console.log("📋 매물 상세보기 요청:", item.title); // 로그 추가
 
-    setDetailItem(item);
-    setShowDetailReport(true);
+    // 상세 페이지로 이동
+    window.location.href = `/auctions/${item.id}`;
   };
 
   // 상세 리포트 닫기
@@ -261,13 +281,22 @@ export default function HomePage() {
     setIsSubmittingUserInfo(true);
 
     try {
-      // 사용자 정보를 서버에 전송
-      const response = await fetch("/api/collect-user-info", {
+      // 사용자 정보를 서버에 전송 (구글 시트 연동)
+      const response = await fetch("/api/user-info", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userInfo),
+        body: JSON.stringify({
+          name: userInfo.name,
+          email: userInfo.email,
+          purpose: "상세 리포트 출시 알림",
+          metadata: {
+            source: "bid-master",
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+          },
+        }),
       });
 
       if (response.ok) {
@@ -398,7 +427,7 @@ export default function HomePage() {
             </div>
 
             {/* 탭 네비게이션 */}
-            <div className="mt-8 flex justify-center gap-4">
+            <div className="mt-8 flex justify-center gap-4 flex-wrap">
               <button
                 onClick={() => setActiveTab("auction")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
@@ -419,14 +448,36 @@ export default function HomePage() {
               >
                 🤖 AI 매물 생성
               </button>
+              <button
+                onClick={() => setActiveTab("tutor")}
+                className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+                  activeTab === "tutor"
+                    ? "bg-white text-primary-600 shadow-lg"
+                    : "bg-white/20 text-white hover:bg-white/30"
+                }`}
+              >
+                🎓 경매 멘토 학습
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* AI 시나리오 생성기 또는 매물 목록 */}
+      {/* AI 시나리오 생성기, 멘토 학습 또는 매물 목록 */}
       {activeTab === "ai-generator" ? (
         <AuctionScenarioGenerator />
+      ) : activeTab === "tutor" ? (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              🎓 경매 멘토 학습
+            </h2>
+            <p className="text-gray-600 text-lg">
+              부동산 경매의 핵심 개념을 학습하고 실전에 대비하세요
+            </p>
+          </div>
+          <InteractiveTutor />
+        </div>
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* 개발자 모드: 디버그 정보 패널 */}

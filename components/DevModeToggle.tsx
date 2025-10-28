@@ -8,10 +8,34 @@ import { useDevMode } from "../lib/DevModeContext";
  * 개발 환경에서만 표시되며, 우측 하단에 플로팅 버튼으로 나타남
  */
 export default function DevModeToggle() {
-  const { isDevMode, toggleDevMode, isDevelopment } = useDevMode();
+  const { isDevMode, toggleDevMode, isDevelopment, isHydrated } = useDevMode();
+
+  // 디버그 로그 추가
+  console.log("🛠️ DevModeToggle 렌더링", {
+    isDevMode,
+    isDevelopment,
+    isHydrated,
+    hasToggleFunction: typeof toggleDevMode === "function",
+  });
+
+  // hydration이 완료되지 않았으면 렌더링하지 않음 (hydration mismatch 방지)
+  if (!isHydrated) {
+    console.log("🛠️ DevModeToggle: hydration 대기 중");
+    return null;
+  }
 
   // 프로덕션 환경에서는 렌더링하지 않음
   if (!isDevelopment) {
+    console.log("🛠️ DevModeToggle: 프로덕션 환경에서 숨김");
+    return null;
+  }
+
+  // 에러 처리: 개발자 모드가 제대로 초기화되지 않은 경우
+  if (typeof isDevMode === "undefined" || typeof toggleDevMode !== "function") {
+    console.warn("⚠️ DevModeToggle: 개발자 모드 초기화 실패", {
+      isDevMode,
+      hasToggleFunction: typeof toggleDevMode === "function",
+    });
     return null;
   }
 
@@ -52,5 +76,3 @@ export default function DevModeToggle() {
     </>
   );
 }
-
-

@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getWeekStart } from "@/lib/dateUtils";
-import { generateScenario, ScenarioParams } from "@/lib/scenarioGenerator";
+import {
+  generateScenario,
+  ScenarioParams,
+  generateAuctionMasterFromScenario,
+} from "@/lib/scenarioGenerator";
 
 const prisma = new PrismaClient();
 
 /**
- * AI 시나리오 생성 API
+ * 🎯 AI 시나리오 생성 API (현재 경매매물 양식 적용)
  * POST /api/ai-scenarios/generate
  * Body: { userId: string, params: ScenarioParams }
  */
@@ -102,6 +106,14 @@ export async function POST(request: NextRequest) {
     const scenario = generateScenario(params as ScenarioParams);
     console.log("✅ 시나리오 생성 완료:", scenario.caseId);
 
+    // 🎯 현재 경매매물 양식으로 변환
+    console.log("🔄 경매매물 양식으로 변환 시작...");
+    const auctionMaster = generateAuctionMasterFromScenario(
+      scenario,
+      params as ScenarioParams
+    );
+    console.log("✅ 경매매물 양식 변환 완료:", auctionMaster.item.title);
+
     // 사용량 증가 (무제한 모드가 아닌 경우에만 증가)
     if (!isUnlimited) {
       await prisma.aIScenarioUsage.update({
@@ -117,9 +129,28 @@ export async function POST(request: NextRequest) {
       console.log("💰 무제한 모드: 사용량 증가하지 않음");
     }
 
+    // 🎯 경매매물 양식 + 기존 시나리오 구조 + 정답분석 통합 반환
     return NextResponse.json({
       success: true,
-      data: scenario,
+      data: {
+        // 🔹 기존 시나리오 구조 (프론트엔드 호환성 유지)
+        caseId: scenario.caseId,
+        propertyInfo: scenario.propertyInfo,
+        documents: scenario.documents,
+        correctAnswer: scenario.correctAnswer,
+
+        // 🔹 경매매물 양식 (현재 경매매물과 동일한 구조) - 추가 데이터
+        auction: {
+          id: scenario.caseId,
+          ...auctionMaster.item,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        detail: auctionMaster.detail,
+        rights: auctionMaster.rights,
+        tenants: auctionMaster.tenants,
+        schedule: auctionMaster.schedule,
+      },
       usage: {
         current: isUnlimited ? usage.usageCount : usage.usageCount + 1,
         limit: isUnlimited ? 999 : limit,

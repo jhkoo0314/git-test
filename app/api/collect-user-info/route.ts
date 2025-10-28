@@ -26,24 +26,26 @@ export async function POST(request: NextRequest) {
     }); // 로그 추가
 
     // 환경 변수 검증
-    const privateKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY;
-    const clientEmail = process.env.GOOGLE_SHEETS_CLIENT_EMAIL;
-    const sheetId = process.env.GOOGLE_SHEET_ID;
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
-    if (!privateKey || !clientEmail || !sheetId) {
+    if (!spreadsheetId || !serviceAccountEmail || !privateKey) {
       console.error("❌ 구글 시트 환경 변수 누락"); // 로그 추가
       return NextResponse.json(
-        { success: false, error: "서버 설정 오류가 발생했습니다." },
+        {
+          success: false,
+          error:
+            "Google Sheets API 환경 변수가 설정되지 않았습니다. .env 파일을 확인하세요.",
+        },
         { status: 500 }
       );
     }
 
     // 구글 시트 API 인증 설정
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        private_key: privateKey.replace(/\\n/g, "\n"),
-        client_email: clientEmail,
-      },
+    const auth = new google.auth.JWT({
+      email: serviceAccountEmail,
+      key: privateKey.replace(/\\n/g, "\n"), // 줄바꿈 문자 처리
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
 
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
     }); // 로그 추가
 
     await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
+      spreadsheetId,
       range: "A:F", // A열부터 F열까지 (이름, 이메일, 목적, 물건정보, 메타데이터, 시간)
       valueInputOption: "RAW",
       requestBody: {
